@@ -1,0 +1,126 @@
+kind: source
+name: food-pg-source
+type: postgres
+host: 127.0.0.1
+port: 5432
+database: toolbox_db
+user: toolbox_user
+password: my-password
+---
+kind: tool
+name: search-restaurants-by-name
+type: postgres-sql
+source: food-pg-source
+description: Search for restaurants based on name.
+parameters:
+  - name: name
+    type: string
+    description: The name of the restaurant.
+statement: SELECT * FROM restaurants WHERE name ILIKE '%' || $1 || '%';
+---
+kind: tool
+name: list-open-restaurants
+type: postgres-sql
+source: food-pg-source
+description: List all restaurants that are currently open.
+parameters: []
+statement: SELECT * FROM restaurants WHERE is_open = TRUE;
+---
+kind: tool
+name: open-restaurant
+type: postgres-sql
+source: food-pg-source
+description: Mark a restaurant as open by its ID.
+parameters:
+  - name: restaurant_id
+    type: string
+    description: The ID of the restaurant to open.
+statement: UPDATE restaurants SET is_open = TRUE WHERE id = CAST($1 AS integer);
+---
+kind: tool
+name: close-restaurant
+type: postgres-sql
+source: food-pg-source
+description: Mark a restaurant as closed by its ID.
+parameters:
+  - name: restaurant_id
+    type: string
+    description: The ID of the restaurant to close.
+statement: UPDATE restaurants SET is_open = FALSE WHERE id = CAST($1 AS integer);
+---
+kind: tool
+name: list-products-by-restaurant
+type: postgres-sql
+source: food-pg-source
+description: List all products sold by a specific restaurant.
+parameters:
+  - name: restaurant_id
+    type: string
+    description: The ID of the restaurant.
+statement: SELECT * FROM products WHERE restaurant_id = CAST($1 AS integer);
+---
+kind: tool
+name: search-products-by-name
+type: postgres-sql
+source: food-pg-source
+description: Search for products across all restaurants based on name.
+parameters:
+  - name: name
+    type: string
+    description: The name of the product.
+statement: SELECT * FROM products WHERE name ILIKE '%' || $1 || '%';
+---
+kind: tool
+name: add-product
+type: postgres-sql
+source: food-pg-source
+description: Add a new product to a restaurant's menu.
+parameters:
+  - name: restaurant_id
+    type: string
+    description: The ID of the restaurant the product belongs to.
+  - name: name
+    type: string
+    description: The name of the product.
+  - name: description
+    type: string
+    description: A description of the product.
+  - name: price
+    type: string
+    description: The price of the product, as a decimal number (e.g. "49.50").
+  - name: stock_quantity
+    type: string
+    description: The remaining stock quantity of the product, as a whole number.
+statement: >-
+  INSERT INTO products (restaurant_id, name, description, price, stock_quantity)
+  VALUES (CAST($1 AS integer), $2, $3, CAST($4 AS numeric), CAST($5 AS integer));
+---
+kind: tool
+name: update-product-stock
+type: postgres-sql
+source: food-pg-source
+description: >-
+  Update the remaining stock quantity of a product by its ID. Returns a
+  message indicating whether the product was successfully updated or not.
+parameters:
+  - name: product_id
+    type: string
+    description: The ID of the product to update.
+  - name: stock_quantity
+    type: string
+    description: The new remaining stock quantity of the product, as a whole number.
+statement: >-
+  UPDATE products SET stock_quantity = CAST($2 AS integer)
+  WHERE id = CAST($1 AS integer);
+---
+kind: toolset
+name: food-toolset
+tools:
+  - search-restaurants-by-name
+  - list-open-restaurants
+  - open-restaurant
+  - close-restaurant
+  - list-products-by-restaurant
+  - search-products-by-name
+  - add-product
+  - update-product-stock
