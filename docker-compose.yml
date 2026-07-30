@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: toolbox-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: toolbox_db
+      POSTGRES_USER: toolbox_user
+      POSTGRES_PASSWORD: my-password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Executed in alphabetical order on first startup only (empty data dir).
+      - ./toolbox/food_schema.sql:/docker-entrypoint-initdb.d/01_food_schema.sql:ro
+      - ./toolbox/food_seed.sql:/docker-entrypoint-initdb.d/02_food_seed.sql:ro
+      - ./toolbox/hotel_schema.sql:/docker-entrypoint-initdb.d/03_hotel_schema.sql:ro
+      - ./toolbox/hotel_seed.sql:/docker-entrypoint-initdb.d/04_hotel_seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U toolbox_user -d toolbox_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
