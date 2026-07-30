@@ -12,9 +12,9 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      # Sets utf8mb4 for the server AND the client that runs the init scripts.
-      - ./mysql.cnf:/etc/mysql/conf.d/utf8mb4.cnf:ro
       # Executed in alphabetical order on first startup only (empty data dir).
+      # Each file gets its own session, so each one opens with SET NAMES utf8mb4
+      # to keep the client from double-encoding the Thai text.
       - ./toolbox/food_schema.sql:/docker-entrypoint-initdb.d/01_food_schema.sql:ro
       - ./toolbox/food_seed.sql:/docker-entrypoint-initdb.d/02_food_seed.sql:ro
     healthcheck:

@@ -1,3 +1,5 @@
+SET NAMES utf8mb4;
+
 INSERT INTO restaurants (name, is_open) VALUES
     ('ร้านส้มตำป้าแดง', TRUE),
     ('ก๋วยเตี๋ยวเรือลุงหมู', TRUE),
