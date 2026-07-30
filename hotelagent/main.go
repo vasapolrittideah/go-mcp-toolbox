@@ -69,7 +69,11 @@ var queries = []string{
 }
 
 func main() {
-	toolboxURL := "http://localhost:5000"
+	// Use 127.0.0.1, not "localhost": on macOS the AirPlay Receiver
+	// (ControlCenter) also listens on *:5000 over IPv6, and "localhost"
+	// resolves to ::1 first, so requests land on AirTunes and get a bare 403.
+	// Toolbox binds IPv4 127.0.0.1 by default.
+	toolboxURL := "http://127.0.0.1:5000"
 	ctx := context.Background()
 
 	// Initialize the LLM client against Ollama's OpenAI-compatible endpoint.
