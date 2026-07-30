@@ -1,79 +1,79 @@
 kind: source
-name: food-pg-source
-type: postgres
+name: food-mysql-source
+type: mysql
 host: 127.0.0.1
-port: 5432
+port: 3306
 database: toolbox_db
 user: toolbox_user
 password: my-password
 ---
 kind: tool
 name: search-restaurants-by-name
-type: postgres-sql
-source: food-pg-source
+type: mysql-sql
+source: food-mysql-source
 description: Search for restaurants based on name.
 parameters:
   - name: name
     type: string
     description: The name of the restaurant.
-statement: SELECT * FROM restaurants WHERE name ILIKE '%' || $1 || '%';
+statement: SELECT * FROM restaurants WHERE name LIKE CONCAT('%', ?, '%');
 ---
 kind: tool
 name: list-open-restaurants
-type: postgres-sql
-source: food-pg-source
+type: mysql-sql
+source: food-mysql-source
 description: List all restaurants that are currently open.
 parameters: []
 statement: SELECT * FROM restaurants WHERE is_open = TRUE;
 ---
 kind: tool
 name: open-restaurant
-type: postgres-sql
-source: food-pg-source
+type: mysql-sql
+source: food-mysql-source
 description: Mark a restaurant as open by its ID.
 parameters:
   - name: restaurant_id
     type: string
     description: The ID of the restaurant to open.
-statement: UPDATE restaurants SET is_open = TRUE WHERE id = CAST($1 AS integer);
+statement: UPDATE restaurants SET is_open = TRUE WHERE id = CAST(? AS SIGNED);
 ---
 kind: tool
 name: close-restaurant
-type: postgres-sql
-source: food-pg-source
+type: mysql-sql
+source: food-mysql-source
 description: Mark a restaurant as closed by its ID.
 parameters:
   - name: restaurant_id
     type: string
     description: The ID of the restaurant to close.
-statement: UPDATE restaurants SET is_open = FALSE WHERE id = CAST($1 AS integer);
+statement: UPDATE restaurants SET is_open = FALSE WHERE id = CAST(? AS SIGNED);
 ---
 kind: tool
 name: list-products-by-restaurant
-type: postgres-sql
-source: food-pg-source
+type: mysql-sql
+source: food-mysql-source
 description: List all products sold by a specific restaurant.
 parameters:
   - name: restaurant_id
     type: string
     description: The ID of the restaurant.
-statement: SELECT * FROM products WHERE restaurant_id = CAST($1 AS integer);
+statement: SELECT * FROM products WHERE restaurant_id = CAST(? AS SIGNED);
 ---
 kind: tool
 name: search-products-by-name
-type: postgres-sql
-source: food-pg-source
+type: mysql-sql
+source: food-mysql-source
 description: Search for products across all restaurants based on name.
 parameters:
   - name: name
     type: string
     description: The name of the product.
-statement: SELECT * FROM products WHERE name ILIKE '%' || $1 || '%';
+statement: SELECT * FROM products WHERE name LIKE CONCAT('%', ?, '%');
 ---
 kind: tool
 name: add-product
-type: postgres-sql
-source: food-pg-source
+type: mysql-sql
+source: food-mysql-source
 description: Add a new product to a restaurant's menu.
 parameters:
   - name: restaurant_id
@@ -93,25 +93,26 @@ parameters:
     description: The remaining stock quantity of the product, as a whole number.
 statement: >-
   INSERT INTO products (restaurant_id, name, description, price, stock_quantity)
-  VALUES (CAST($1 AS integer), $2, $3, CAST($4 AS numeric), CAST($5 AS integer));
+  VALUES (CAST(? AS SIGNED), ?, ?, CAST(? AS DECIMAL(10, 2)), CAST(? AS SIGNED));
 ---
 kind: tool
 name: update-product-stock
-type: postgres-sql
-source: food-pg-source
+type: mysql-sql
+source: food-mysql-source
 description: >-
   Update the remaining stock quantity of a product by its ID. Returns a
   message indicating whether the product was successfully updated or not.
 parameters:
-  - name: product_id
-    type: string
-    description: The ID of the product to update.
+  # Declaration order must match the `?` placeholder order in the statement.
   - name: stock_quantity
     type: string
     description: The new remaining stock quantity of the product, as a whole number.
+  - name: product_id
+    type: string
+    description: The ID of the product to update.
 statement: >-
-  UPDATE products SET stock_quantity = CAST($2 AS integer)
-  WHERE id = CAST($1 AS integer);
+  UPDATE products SET stock_quantity = CAST(? AS SIGNED)
+  WHERE id = CAST(? AS SIGNED);
 ---
 kind: toolset
 name: food-toolset
