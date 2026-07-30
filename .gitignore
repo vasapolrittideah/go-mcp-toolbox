@@ -1,2 +1,4 @@
 toolbox
 !/toolbox/
+# Compiled agent binary
+/main
